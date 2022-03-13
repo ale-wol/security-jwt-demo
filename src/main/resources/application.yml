@@ -1,0 +1,24 @@
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: Spring Boot Demo Application
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+
+  jpa:
+    generated-ddl: true
+    hibernate:
+      ddl-auto: update
+
+  h2:
+    console:
+        enabled: true
+
