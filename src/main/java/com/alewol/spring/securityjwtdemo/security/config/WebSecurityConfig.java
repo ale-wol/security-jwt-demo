@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +20,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
 
 import com.alewol.spring.securityjwtdemo.filter.CustomAuthenticationFilter;
+import com.alewol.spring.securityjwtdemo.filter.CustomAuthorizationFilter;
 
 
 @Configuration
@@ -45,6 +47,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeHttpRequests().antMatchers(HttpMethod.POST, "/" + ROOT + "user/save/").hasAnyAuthority("ROLE_USER");
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(customAuthenticationFilter);
+        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override
