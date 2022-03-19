@@ -1,5 +1,12 @@
 package com.alewol.spring.securityjwtdemo.filter;
 
+import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
+import static com.alewol.spring.securityjwtdemo.constants.Paths.TOKEN;
+import static java.util.Arrays.stream;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+//import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,18 +31,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-//import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static java.util.Arrays.stream;
-
 @Slf4j
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)throws ServletException, IOException {
-        if(request.getServletPath().equals("/" + ROOT + "login")){
+        if(request.getServletPath().equals("/" + ROOT + "login") || request.getServletPath().equals("/" + ROOT + TOKEN + "refresh")) {
             filterChain.doFilter(request, response);
         }
         else
@@ -77,6 +78,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
             }
             else
             {
+                log.info("Missing auth header");
                 filterChain.doFilter(request, response);
             }
         };

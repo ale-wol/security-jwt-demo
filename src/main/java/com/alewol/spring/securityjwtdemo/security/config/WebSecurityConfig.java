@@ -1,6 +1,14 @@
 package com.alewol.spring.securityjwtdemo.security.config;
 
     
+import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
+import static com.alewol.spring.securityjwtdemo.constants.Paths.TOKEN;
+import static com.alewol.spring.securityjwtdemo.constants.Paths.USER;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
+import com.alewol.spring.securityjwtdemo.filter.CustomAuthenticationFilter;
+import com.alewol.spring.securityjwtdemo.filter.CustomAuthorizationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,12 +23,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
-
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
-import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
-
-import com.alewol.spring.securityjwtdemo.filter.CustomAuthenticationFilter;
-import com.alewol.spring.securityjwtdemo.filter.CustomAuthorizationFilter;
 
 
 @Configuration
@@ -42,9 +44,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         customAuthenticationFilter.setFilterProcessesUrl("/" + ROOT + "login");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
-        http.authorizeRequests().antMatchers("/" + ROOT + "login/**").permitAll();
-        http.authorizeHttpRequests().antMatchers(HttpMethod.GET, "/" + ROOT + "**").hasAnyAuthority("ROLE_USER");
-        http.authorizeHttpRequests().antMatchers(HttpMethod.POST, "/" + ROOT + "user/save/").hasAnyAuthority("ROLE_USER");
+        http.authorizeRequests().antMatchers("/" + ROOT + "login/**", "/" + ROOT + TOKEN + "refresh/**").permitAll();
+        http.authorizeHttpRequests().antMatchers(HttpMethod.GET, "/" + ROOT + USER + "**").hasAnyAuthority("ROLE_USER");
+        http.authorizeHttpRequests().antMatchers(HttpMethod.POST, "/" + ROOT + USER + "save/").hasAnyAuthority("ROLE_USER");
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
