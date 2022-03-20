@@ -4,6 +4,7 @@ import static com.alewol.spring.securityjwtdemo.constants.Paths.ROLE;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.TOKEN;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.USER;
+import static com.alewol.spring.securityjwtdemo.util.AuthorizationHeaderHelper.checkAuthorizationHeaderException;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -99,12 +100,7 @@ public class AppUserController {
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
             }
             catch (Exception exception) {
-                response.setHeader("error", exception.getMessage());
-                
-                Map<String, String> error = new HashMap<>();
-                error.put("error_message", exception.getMessage());
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), error);
+                checkAuthorizationHeaderException(response, exception);
             }
         }
         else {
