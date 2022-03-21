@@ -4,16 +4,17 @@ import static com.alewol.spring.securityjwtdemo.constants.Paths.ROLE;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.ROOT;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.TOKEN;
 import static com.alewol.spring.securityjwtdemo.constants.Paths.USER;
-import static com.alewol.spring.securityjwtdemo.util.AuthorizationHeaderHelper.checkAuthorizationHeaderException;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.HeaderPrefix;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.checkAuthorizationHeaderException;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.getAccessTokenTimeout;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.getDecodedJWT;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.jwtEncriptionAlgorithm;
+import static com.alewol.spring.securityjwtdemo.util.JwtHelper.writeJwtJson;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,10 +24,7 @@ import com.alewol.spring.securityjwtdemo.model.AppUser;
 import com.alewol.spring.securityjwtdemo.model.Role;
 import com.alewol.spring.securityjwtdemo.service.AppUserService;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.auth0.jwt.interfaces.JWTVerifier;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,32 +70,27 @@ public class AppUserController {
     @GetMapping(TOKEN + "refresh")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException{
         String authorizationHeader = request.getHeader(AUTHORIZATION);
-        if(authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
+        if(authorizationHeader != null && authorizationHeader.startsWith(HeaderPrefix))
         {
             try
             {
-                String refresh_token = authorizationHeader.substring("Bearer ".length());
+                String refresh_token = authorizationHeader.substring(HeaderPrefix.length());
                 //TODO Refactor doublecated code in util class
-                Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
-                JWTVerifier verifier = JWT.require(algorithm).build();
-                DecodedJWT decodedJWT= verifier.verify(refresh_token);
-                String username = decodedJWT.getSubject();
 
+                DecodedJWT decodedJWT= getDecodedJWT(refresh_token);
+                String username = decodedJWT.getSubject();
                 AppUser user = userService.getUser(username);
                 
 
                 String access_token = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000 )) // 10 Minutes Timeout
+                .withExpiresAt(getAccessTokenTimeout())
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
-                .sign(algorithm);
+                .sign(jwtEncriptionAlgorithm);
 
-                Map<String, String> tokens = new HashMap<>();
-                tokens.put("access_token", access_token);
-                tokens.put("refresh_token", refresh_token);
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+
+                writeJwtJson(response, access_token, refresh_token);
             }
             catch (Exception exception) {
                 checkAuthorizationHeaderException(response, exception);
